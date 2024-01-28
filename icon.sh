@@ -96,9 +96,9 @@ function deployICS20Bank(){
 }
 
 
-function deployLightClient() {
-	echo "$ICON Deploy Tendermint Light Client"
-	local filename=$ICON_LIGHT_CLIENT_CONTRACT
+function deployLightClientIcs20() {
+	echo "$ICON Deploy Tendermint Light Client for ICS20"
+	local filename=$ICON_LIGHT_CLIENT_CONTRACT_ICS20
 	local ibcHandler=$1
 
 	local txHash=$(goloop rpc sendtx deploy $LIGHT_ICON_ICS20 \
@@ -110,19 +110,44 @@ function deployLightClient() {
 	wait_for_it $txHash
 	scoreAddr=$(goloop rpc txresult --uri $ICON_NODE $txHash | jq -r .scoreAddress)
 	echo $scoreAddr > $filename
-}
 
-function registerClient() {
-    echo "$ICON Register Tendermint Light Client"
-    local toContract=$1
-    local clientAddr=$2
 
-    local txHash=$(goloop rpc sendtx call \
-	    --to $toContract\
+	echo "$ICON regsiter light client ICS20"
+	local txHash=$(goloop rpc sendtx call \
+	    --to $ibcHandler\
 	    --method registerClient \
 	    --param clientType="ics08-tendermint" \
 		--param hashType=1 \
-	    --param client=$clientAddr \
+	    --param client=$scoreAddr \
+		$tx_call_args_icon_common | jq -r .)
+    sleep 6
+    wait_for_it $txHash
+
+}
+
+function deployLightClientCosmwasm() {
+
+	echo "$ICON Deploy Tendermint Light Client Cosmwasm "
+	local filename=$ICON_LIGHT_CLIENT_CONTRACT_COSMWASM
+	local ibcHandler=$1
+
+	local txHash=$(goloop rpc sendtx deploy $LIGHT_ICON_COSMWASM \
+			--content_type application/java \
+			--to cx0000000000000000000000000000000000000000 \
+            --param ibcHandler=$ibcHandler \
+			$tx_call_args_icon_common| jq -r .)
+    sleep 6
+	wait_for_it $txHash
+	scoreAddr=$(goloop rpc txresult --uri $ICON_NODE $txHash | jq -r .scoreAddress)
+	echo $scoreAddr > $filename
+
+    echo "$ICON Register Tendermint Light Client"
+
+    local txHash=$(goloop rpc sendtx call \
+	    --to $ibcHandler\
+	    --method registerClient \
+	    --param clientType="07-tendermint" \
+	    --param client=$scoreAddr \
 		$tx_call_args_icon_common | jq -r .)
     sleep 6
     wait_for_it $txHash
@@ -145,29 +170,6 @@ function bindPort() {
     sleep 6
     wait_for_it $txHash
 }
-
-
-function setupICS20(){
-
-    echo "$ICON  setup ics20 complete"
-
-    local ibcHandler=$1
-
-    #deploy ics20bank
-    deployICS20Bank
-
-    local ics20BankAddress=$(cat $ICON_ICS20_BANK_CONTRACT)
-
-    echo "ics20 address is "$ics20BankAddress
-
-    #deploy ics20App
-    deployICS20App $ibcHandler $ics20BankAddress
-	readyICS20App
-
-}
-
-
-
 
 function readyICS20App(){
 
@@ -251,36 +253,70 @@ function callSendToken(){
 
 }
 
-function deployCosmwasmLightClient(){
+function readyICS20(){
 
-	echo "$ICON Deploy Tendermint Light Client"
-	local filename=$ICON_LIGHT_CLIENT_CONTRACT_COSMWASM
-	local ibcHandler=$(cat $ICON_IBC_CONTRACT)
+    local ibcHandler=$(cat $ICON_IBC_CONTRACT)
 
-	local txHash=$(goloop rpc sendtx deploy $LIGHT_ICON_ICS20 \
+    separator
+	echo "$ICON  setup ics20 complete"
+
+    #deploy ics20bank
+    deployICS20Bank
+
+    local ics20BankAddress=$(cat $ICON_ICS20_BANK_CONTRACT)
+
+    echo "ics20 address is "$ics20BankAddress
+
+    #deploy ics20App
+    deployICS20App $ibcHandler $ics20BankAddress
+
+	separator
+	echo "$ICON binding ics-20 apps"
+	local ics20_addr=$(cat $ICON_ICS20_APP_CONTRACT)
+	bindPort $ibcHandler $PORT_ID_ICS20 $ics20_addr
+	separator
+	
+	
+	# Setting up ics20 App
+	readyICS20App
+}
+
+function deployMockApp() {
+	echo "$ICON Deploy IBC MockApp"
+	local ibcHandler=$1
+	local filename=$2
+
+	if [ -z "$filename" ]; then
+		filename=$ICON_MOCK_APP_CONTRACT
+	fi
+
+	local txHash=$(goloop rpc sendtx deploy $MOCK_ICON \
 			--content_type application/java \
 			--to cx0000000000000000000000000000000000000000 \
-            --param ibcHandler=$ibcHandler \
+			--param ibcHandler=$ibcHandler \
 			$tx_call_args_icon_common| jq -r .)
+
     sleep 6
 	wait_for_it $txHash
 	scoreAddr=$(goloop rpc txresult --uri $ICON_NODE $txHash | jq -r .scoreAddress)
 	echo $scoreAddr > $filename
-
-
-    separator
-	local txHash=$(goloop rpc sendtx call \
-	    --to $ibcHandler\
-	    --method registerClient \
-	    --param clientType="ics08-tendermint" \
-	    --param client=$scoreAddr \
-		--param hashType=1 \
-		$tx_call_args_icon_common | jq -r .)
-    sleep 6
-    wait_for_it $txHash
-    separator
-
 }
+
+
+function readyIBCMock(){
+
+	local ibcHandler=$(cat $ICON_IBC_CONTRACT)
+	deployMockApp $ibcHandler $ICON_MOCK_APP_CONTRACT
+
+	separator
+	echo "$ICON binding mock apps"
+	local contractAddr=$(cat $ICON_MOCK_APP_CONTRACT)
+	bindPort $ibcHandler $PORT_ID_MOCK $contractAddr
+	separator
+	log 
+}
+
+
 
 ########## ENTRYPOINTS ###############
 
@@ -313,40 +349,34 @@ function setup() {
     separator
     openBTPNetwork eth $ibcHandler
 
+	separator
+	deployLightClientCosmwasm $ibcHandler
+	echo "$ICON light client for Cosmwasm deployed at address:"
+    local tmClientCosmwasm=$(cat $ICON_LIGHT_CLIENT_CONTRACT_COSMWASM)
+    echo $tmClientCosmwasm 
+
     separator
-    deployLightClient $ibcHandler
-    echo "$ICON TM client deployed at address:"
-    local tmClient=$(cat $ICON_LIGHT_CLIENT_CONTRACT)
+    deployLightClientIcs20 $ibcHandler
+    echo "$ICON ICS20 light client deployed at address:"
+    local tmClient=$(cat $ICON_LIGHT_CLIENT_CONTRACT_ICS20)
     echo $tmClient   
-
-    separator
-    registerClient $ibcHandler $tmClient
-
-    separator
-
-	setupICS20 $ibcHandler 
-    
-	separator
-	local port_id=$(cat $CURRENT_PORT_ID)
-	local ics20_addr=$(cat $ICON_ICS20_APP_CONTRACT)
-	bindPort $ibcHandler $port_id $ics20_addr
-	separator
-	log
 
 }
 
 
 case "$CMD" in
-  setup )
+  setup )   
     setup
   ;;
-  ready-ics20 ) 
-   readyICS20App
+  ready-ics20 )
+	readyICS20
   ;;
-  deploy-cosmwasm-light-client ) 
-	deployCosmwasmLightClient
+
+  ready-mock )
+    readyIBCMock
   ;;
-  send-token )
+
+  send-token-ics20 )
 	callSendToken
   ;;
 

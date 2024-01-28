@@ -21,7 +21,7 @@ function chainStart(){
 
 function deployWasm() {
 
-  local tx="centaurid tx 08-wasm push-wasm $WASM_LIGHT_CLIENT \
+  local tx="centaurid tx 08-wasm push-wasm $WASM_LIGHT_CLIENT_ICS20 \
 --chain-id $centaurid_chain_id  \
 --from $centaurid_key \
 --node $CENTAURI_NODE \
