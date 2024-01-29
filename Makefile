@@ -1,5 +1,3 @@
-
-
 start-centauri:
 	./centauri.sh chain-start
 
@@ -8,4 +6,11 @@ centauri-native-ready:
 
 icon-ibc:
 	./icon.sh setup
+
+icon-ibc-ready:
+   ./icon.sh setup
+   ./icon.sh ready-ics20
+
+update-config:
+   ./cfg.update.sh
 

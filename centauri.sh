@@ -46,6 +46,28 @@ function deployWasm() {
 }
 
 
+function transferToken (){
+
+local transaction="centaurid tx ibc-transfer transfer transfer channel-1 hxb6b5791be0b5ef67063b3c10b840fb81514db2fd 95000000ibc/7B5CC83B4CDF78974694E6000E3C5C07AFA7C32CDB98FA365E5C9E4F9B59CEAA \
+--packet-timeout-height 1-500000 \
+--packet-timeout-timestamp 0 \
+--chain-id $centaurid_chain_id  \
+--from $centaurid_key \
+--gas-prices 0.1stake \
+--gas-adjustment 1.5 \
+--gas auto --output json -y"
+op=$($transaction)
+echo $op
+
+local txHash=$(op | .jq ".txhash")
+sleep 4
+echo $txHash
+local op=$(centaurid query tx $txHash --node $centaurid_chain_id )
+
+
+}
+
+
 
 if [ $# -ge 1 ]; then
     CMD=$1
@@ -63,6 +85,11 @@ case "$CMD" in
     deploy-wasm ) 
     deployWasm
     ;;
+    
+    transfer-token ) 
+     transferToken
+    ;;
+
     * )
     echo "invalid cmd" $CMD
 esac

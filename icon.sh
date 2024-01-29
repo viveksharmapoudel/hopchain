@@ -234,20 +234,21 @@ function callSendToken(){
 
 	local centauriKeyAddress=$(centaurid keys list --output json | jq -r '.[] | select(.name == "mykey") | .address')
 
-	local txHash=$(goloop rpc sendtx call \
+	local query="goloop rpc sendtx call \
 	    --to $ics20AppAddress \
 		--method sendTransfer \
-		--param denom=$DENOM \
+		--param denom=icx \
         --param receiver=$centauriKeyAddress \
-        --param amount="950000000000" \
+        --param amount="950000000" \
+		--param value="950000000" \
         --param sourcePort="transfer" \
         --param sourceChannel="channel-0" \
         --param timeoutHeight=5000000 \
         --param timeoutRevisionNumber=1 \
-		--uri $ICON_NODE  --nid $ICON_NETWORK_ID  --step_limit 100000000000 --key_store $ICON_WALLET --key_password $ICON_WALLET_PASSWORD | jq -r .)
+		--uri $ICON_NODE  --nid $ICON_NETWORK_ID  --step_limit 100000000000 --key_store $ICON_WALLET --key_password $ICON_WALLET_PASSWORD | jq -r ."
 
-	# echo $query
-	# local txHash=$($query)
+	echo $query
+	local txHash=$($query)
     sleep 2
     wait_for_it $txHash
 
@@ -316,6 +317,21 @@ function readyIBCMock(){
 	log 
 }
 
+function checkBalance(){
+
+	local walletAddress=$1
+	local denom=$2
+
+	local ics20Bank=$(cat $ICON_ICS20_BANK_CONTRACT)
+
+
+	local call=$(goloop rpc --uri http://localhost:9082/api/v3 call \
+					--to $ics20Bank \
+					--method balanceOf \
+					--param account=$walletAddress \
+					--param denom=$2 )
+	echo "balance is: " $call
+}
 
 
 ########## ENTRYPOINTS ###############
@@ -364,6 +380,8 @@ function setup() {
 }
 
 
+
+
 case "$CMD" in
   setup )   
     setup
@@ -378,6 +396,13 @@ case "$CMD" in
 
   send-token-ics20 )
 	callSendToken
+  ;;
+
+  check-balance ) 
+#   echo "for checking balance passexample checkBalance walletAddress denom"
+#   echo "walletAddress example: hxb6b5791be0b5ef67063b3c10b840fb81514db2fd"
+#   echo "denom example: transfer/channel-0/stake"
+    checkBalance $1 $2 
   ;;
 
   * )

@@ -72,6 +72,7 @@ TOKEN=stake
 WASM_NODE=http://localhost:26657
 WASM_WALLET=localnetWallet
 WASM_SLEEP_TIME=5
+RELAY_WALLET_NAME=localnetWallet
 
 # cosmwasm contracts
 IBC_WASM=$CONTRACTS_DIR/artifacts/archway/cw_ibc_core_latest.wasm
