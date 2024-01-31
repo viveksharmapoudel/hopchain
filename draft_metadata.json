@@ -1,0 +1,10 @@
+{
+ "title": "one",
+ "authors": [
+  "two"
+ ],
+ "summary": "three",
+ "details": "4",
+ "proposal_forum_url": "http://facebook.com",
+ "vote_option_context": "yes"
+}

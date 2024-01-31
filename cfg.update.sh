@@ -9,9 +9,9 @@ iconIBC=$(cat $ICON_IBC_CONTRACT)
 
 
 
-lastNetworkId=$(goloop rpc --uri $icon_local btpnetworktype 0x01 | jq ".openNetworkIDs| last" | sed 's/"//g' )
+lastNetworkId=$(goloop rpc --uri $ICON_NODE btpnetworktype 0x01 | jq ".openNetworkIDs| last" | sed 's/"//g' )
 decimalLastNetworkId=$(printf "%d" "$lastNetworkId")
-ownerLastNetworkId=$(goloop rpc --uri $icon_local btpnetwork $decimalLastNetworkId | jq ".owner"  | sed 's/"//g')
+ownerLastNetworkId=$(goloop rpc --uri $ICON_NODE btpnetwork $decimalLastNetworkId | jq ".owner"  | sed 's/"//g')
 
 
 
@@ -37,7 +37,7 @@ chains:
     centauri:
         type: cosmos
         value:
-            key-directory: /Users/viveksharmapoudel/.relayer/keys/$centaurid_chain_id
+            key-directory: $HOME/.relayer/keys/$centaurid_chain_id
             key: default
             chain-id: $centaurid_chain_id
             rpc-addr: $CENTAURI_NODE
@@ -60,7 +60,7 @@ chains:
     icon:
         type: icon
         value:
-            key-directory: /Users/viveksharmapoudel/.relayer/keys
+            key-directory: $HOME/.relayer/keys
             chain-id: $ICON_CHAIN_ID
             rpc-addr: $ICON_NODE
             timeout: 30s
@@ -77,7 +77,7 @@ chains:
     archway:
         type: wasm
         value:
-            key-directory: /Users/viveksharmapoudel/.relayer/keys/$WASM_CHAIN_ID
+            key-directory: $HOME/.relayer/keys/$WASM_CHAIN_ID
             key: $RELAY_WALLET_NAME
             chain-id: $WASM_CHAIN_ID
             rpc-addr: $WASM_NODE

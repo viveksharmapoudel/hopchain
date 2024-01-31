@@ -67,6 +67,43 @@ local op=$(centaurid query tx $txHash --node $centaurid_chain_id )
 
 }
 
+function submitProposal(){
+
+  centaurid tx gov submit-proposal draft_proposal_wasm_add.json \
+--chain-id centauri-testnet-1  \
+--from mykey \
+--node http://127.0.0.1:50001 \
+--gas-prices 0.1stake  \
+--gas-adjustment 1.5 \
+--gas auto -y
+}
+
+
+function voteProposal(){
+
+centaurid tx gov vote 1 yes  \
+--chain-id centauri-testnet-1  \
+--from mykey \
+--node http://127.0.0.1:50001 \
+--gas-prices 0.1stake  \
+--gas-adjustment 1.5 \
+--gas auto -y
+
+
+}
+
+# function depositProposal(){
+
+#   centauri tx gov deposit 1 10000010stake \
+# --chain-id centauri-testnet-1  \
+# --from mykey \
+# --node http://127.0.0.1:50001 \
+# --gas-prices 0.1stake  \
+# --gas-adjustment 1.5 \
+# --gas auto -y
+
+# }
+
 
 
 if [ $# -ge 1 ]; then

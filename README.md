@@ -49,6 +49,8 @@ One of the address that you can generate is :
 centauri1g5r2vmnp6lta9cpst4lzc4syy3kcj2ljte3tlh
 ```
 
+<!-- Make install to intall binary locally  -->
+
 Corresponding to mnemonics:
 
 ```
@@ -83,7 +85,7 @@ note: IBC donot need to be deployed on centauri
 
 # Deploy IBC on ICON
 
-IBC contract are in [ibc-integration repo](https://github.com/icon-project/ibc-integration). Checkout `808-investigate-commitment-prefix-usage-in-ibc-java` branch and build contract using command:
+IBC contract are in [ibc-integration repo](https://github.com/icon-project/ibc-integration). Checkout `fix/808-investigate-commitment-prefix-usage-in-ibc-java` branch and build contract using command:
 
 ```
 ./scripts/optimize-jar.sh
@@ -123,4 +125,16 @@ note: make sure to change the src-wasm-code-id if you change the cw_wasm_light_c
 
 ```
 centaurid query 08-wasm all-wasm-code
+```
+
+### Create connection
+
+```
+rly tx conn centauri-icon -d
+```
+
+### Create channel
+
+```
+rly tx chan centauri-icon --src-port=transfer --dst-port=transfer -d
 ```

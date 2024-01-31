@@ -1,0 +1,13 @@
+{
+ "messages": [
+  {
+   "@type": "/composable.transfermiddleware.v1beta1.MsgAddRlyAddress",
+   "authority": "centauri10d07y265gmmuvt4z0w9aw880jnsr700j7g7ejq",
+   "rly_address": "centauri1g5r2vmnp6lta9cpst4lzc4syy3kcj2ljte3tlh"
+  }
+ ],
+ "metadata": "none",
+ "deposit": "10000010stake",
+ "title": "one",
+ "summary": "three"
+}
